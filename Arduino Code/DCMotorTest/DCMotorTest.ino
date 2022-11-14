@@ -20,8 +20,8 @@ void setup() {
 void loop() {
   myMotor1->run(FORWARD);
   myMotor1->setSpeed(255);
-  delay(1000);
-  myMotor1->run(RELEASE);
+  myMotor2->run(FORWARD);
+  myMotor2->setSpeed(240);
   delay(1000);
   Serial.println("Pausing");
 }
