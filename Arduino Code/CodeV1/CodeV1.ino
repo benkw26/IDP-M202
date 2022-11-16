@@ -1,9 +1,9 @@
 #define LEFT_ENCODER 2
 #define RIGHT_ENCODER 3
-#define LEFT_LINE A0
-#define RIGHT_LINE A1
-#define LEFT_CHECK A2
-#define RIGHT_CHECK A3
+#define LEFT_LINE 6
+#define RIGHT_LINE 4
+#define LEFT_CHECK 5
+#define RIGHT_CHECK 7
 
 //+++DEFINING MOTORSHIELD+++//
 #include <Adafruit_MotorShield.h>
@@ -24,7 +24,6 @@ bool line_running = false;
 //+++CONSTANT VARIABLES+++//
 const float wheel_radius = 34.85; //mm
 const float wheel_sep = 240; //mm
-const int line_threshold = 100;
 const int line_speed = 4090;
 
 void setup() {
@@ -52,32 +51,35 @@ void setup() {
   RightMotor->setSpeedFine(0);
   LeftMotor->run(FORWARD);
   RightMotor->run(FORWARD);
+  line_start();
 }
  
 void loop() {
-  switch (state) {
-    case 0:
-      enc_move(100);
-      state++;
-      break;
+  Serial.print("encoder_running");Serial.println(encoder_running);
+  Serial.print("line_running");Serial.println(line_running);
+  // switch (state) {
+  //   case 0:
+  //     enc_move(380);
+  //     state++;
+  //     break;
 
-    case 1:
-      if (!encoder_running){
-        enc_pivot(900);
-        state++;
-      }
-      break;
+  //   case 1:
+  //     if (!encoder_running){
+  //       enc_pivot(900);
+  //       state++;
+  //     }
+  //     break;
     
-    case 2:
-      if (!encoder_running){
-        line_start();
-        state++;
-      }
-      break;
+  //   case 2:
+  //     if (!encoder_running){
+  //       line_start();
+  //       state++;
+  //     }
+  //     break;
 
-    default:
-      Serial.print("State not written - State ");Serial.println(state);
-  }
+  //   default:
+  //     Serial.print("State not written - State ");Serial.println(state);
+  // }
 
   if (line_running){
     line_update();
@@ -93,6 +95,7 @@ void loop() {
 //+++LINE FOLLOW FUNCTIONS+++///
 
 void line_start(){
+  Serial.println("Line Starting");
   line_running = true;
   LeftMotor->setSpeedFine(4000);
   RightMotor->setSpeedFine(4000);
@@ -103,17 +106,19 @@ void line_start(){
 }
 
 void line_update(){
-  if((analogRead(LEFT_LINE)<=100) && (!analogRead(RIGHT_LINE)<=100)) {
+  delay(200);
+  Serial.println("Updating Line");
+  if(digitalRead(LEFT_LINE)==0 && digitalRead(RIGHT_LINE)==1) {
     //turn left
-    LeftMotor->run(FORWARD);
-    RightMotor->run(BACKWARD);
-  }
-  else if(!analogRead(LEFT_LINE)<=100 && analogRead(RIGHT_LINE)<=100){
-    //turn right
     LeftMotor->run(BACKWARD);
     RightMotor->run(FORWARD);
   }
-  else if(!analogRead(LEFT_LINE)<=100 && !analogRead(RIGHT_LINE)<=100){
+  else if(digitalRead(LEFT_LINE)==1 && digitalRead(RIGHT_LINE)==0){
+    //turn right
+    LeftMotor->run(FORWARD);
+    RightMotor->run(BACKWARD);
+  }
+  else if(digitalRead(LEFT_LINE)==1 && digitalRead(RIGHT_LINE)==1){
     //keep moving
     LeftMotor->run(FORWARD);
     RightMotor->run(FORWARD);
@@ -162,8 +167,8 @@ void enc_pivot(int angle){ //units in 0.1deg
 
 void enc_update(){
   //  Update motor speed proportionally 
-  int left_motor_speed = constrain(1000+(target_ticks-left_ticks)*75, 0, 4090);
-  int right_motor_speed = constrain(1000+(target_ticks-right_ticks)*75, 0, 4090);
+  int left_motor_speed = constrain(1200+(target_ticks-left_ticks)*75, 0, 4090);
+  int right_motor_speed = constrain(1200+(target_ticks-right_ticks)*75, 0, 4090);
 
   // Slow each motor if it's ahead of the other
   if (left_ticks > right_ticks){
