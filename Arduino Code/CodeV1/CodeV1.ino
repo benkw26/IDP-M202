@@ -30,10 +30,10 @@ void setup() {
   Serial.begin(115200);
 
   //+++SETTING UP LINE FOLLOW PINS+++//
-  pinMode(LEFT_LINE, INPUT);
-  pinMode(RIGHT_LINE, INPUT);
-  pinMode(LEFT_CHECK, INPUT);
-  pinMode(RIGHT_CHECK, INPUT);
+  pinMode(LEFT_LINE, INPUT_PULLUP);
+  pinMode(RIGHT_LINE, INPUT_PULLUP);
+  pinMode(LEFT_CHECK, INPUT_PULLUP);
+  pinMode(RIGHT_CHECK, INPUT_PULLUP);
  
   //+++SETTING UP ENCODER PIN INTERRUPTS+++//
   pinMode(LEFT_ENCODER, INPUT);
@@ -51,35 +51,54 @@ void setup() {
   RightMotor->setSpeedFine(0);
   LeftMotor->run(FORWARD);
   RightMotor->run(FORWARD);
-  line_start();
 }
  
 void loop() {
   Serial.print("encoder_running");Serial.println(encoder_running);
   Serial.print("line_running");Serial.println(line_running);
-  // switch (state) {
-  //   case 0:
-  //     enc_move(380);
-  //     state++;
-  //     break;
+   switch (state) {
+     case 0:
+       enc_move(380);
+       state++;
+       break;
 
-  //   case 1:
-  //     if (!encoder_running){
-  //       enc_pivot(900);
-  //       state++;
-  //     }
-  //     break;
+     case 1:
+       if (!encoder_running){
+         enc_pivot(900);
+         state++;
+       }
+       break;
     
-  //   case 2:
-  //     if (!encoder_running){
-  //       line_start();
-  //       state++;
-  //     }
-  //     break;
+     case 2:
+       if (!encoder_running){
+         line_start();
+         state++;
+       }
+       break;
+     case 3:
+      if (digitalRead(RIGHT_CHECK)==0 && digitalRead(LEFT_CHECK)==1){
+        line_running = false;
+        enc_move(50);
+        state++;
+      }
+      break;
+    case 4:
+      if (!encoder_running){
+         line_start();
+         state++;
+       }
+       break;
+    case 5:
+      if (digitalRead(RIGHT_CHECK)==1 && digitalRead(LEFT_CHECK)==0){
+        line_running = false;
+        enc_move(300);
+        state++;
+      }
+       break;
 
-  //   default:
-  //     Serial.print("State not written - State ");Serial.println(state);
-  // }
+     default:
+       Serial.print("State not written - State ");Serial.println(state);
+   }
 
   if (line_running){
     line_update();
