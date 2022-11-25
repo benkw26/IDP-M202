@@ -12,9 +12,6 @@
 #define LEFT_TRIG 13
 #define IR_TUNNEL A0
 
-
-long timey = 0;
-
 //+++DEFINING MOTORSHIELD+++//
 #include <Adafruit_MotorShield.h>
 // Create the motor shield object with the default I2C address
