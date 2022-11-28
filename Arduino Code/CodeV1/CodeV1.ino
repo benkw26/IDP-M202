@@ -58,7 +58,7 @@ void loop() {
   Serial.print("line_running");Serial.println(line_running);
    switch (state) {
      case 0:
-       enc_move(380);
+       enc_move(30);
        state++;
        break;
 

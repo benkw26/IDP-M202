@@ -14,7 +14,6 @@
 #define USE_TIMER_2     false
 #define USE_TIMER_3     false
 #define TIMER1_INTERVAL_MS    1000
-#include <megaAVR_TimerInterrupt.h>
 
 
 //+++DEFINING MOTORSHIELD+++//

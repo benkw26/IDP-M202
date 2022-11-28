@@ -11,7 +11,10 @@
 #define LEFT_ECHO 12
 #define LEFT_TRIG 13
 #define IR_TUNNEL A2
-
+#define RED_LED 1
+#define YELLOW_LED A3
+#define GREEN_LED 0
+ 
 
 long timey = 0;
 
@@ -88,13 +91,13 @@ void setup() {
   delay(100);
 
   //+++SETTING UP LED PINS+++//
-  pinMode(A3, OUTPUT);
-  pinMode(0, OUTPUT);
-  pinMode(1, OUTPUT);
+  pinMode(YELLOW_LED, OUTPUT);
+  pinMode(GREEN_LED, OUTPUT);
+  pinMode(RED_LED, OUTPUT);
   
-  digitalWrite(A3, HIGH);
+  digitalWrite(YELLOW_LED, HIGH);
   delay(1000);
-  digitalWrite(A3, LOW);
+  digitalWrite(YELLOW_LED, LOW);
 }
  
 void loop() {
@@ -102,9 +105,9 @@ void loop() {
      case 0:
      //Moving straight out of the starting box//
       delay(1000);
-       enc_move(333);
-       state++;
-       break;
+      enc_move(333);
+      state++;
+      break;
 
      case 1:
      //Turning right onto the main line//
@@ -116,11 +119,11 @@ void loop() {
     
      case 2:
      //Following the line//
-       if (!encoder_running){
-         line_start();
-         state++;
-       }
-       break;
+     if (!encoder_running){
+      line_start();  
+      state++;
+     }
+     break;
     
      case 3:
       //Skipping red junction//
@@ -147,13 +150,14 @@ void loop() {
         RightMotor->setSpeedFine(0);
         is_high_density = check_block();
         if (is_high_density){
-          digitalWrite(0, HIGH);
+          digitalWrite(GREEN_LED, HIGH);
+          delay(5000);
+          digitalWrite(GREEN_LED, LOW);
         } else {
-          digitalWrite(1, HIGH);
+          digitalWrite(RED_LED, HIGH);
+          delay(5000);
+          digitalWrite(RED_LED, LOW);
         }
-        delay(5000);
-        digitalWrite(0, LOW);
-        digitalWrite(1, LOW);
         pickup();
         line_start();
         state++;
@@ -163,19 +167,21 @@ void loop() {
     case 6:
       //Skip 3rd block junction
       if (left_ticks>80 && digitalRead(RIGHT_CHECK)==1 && digitalRead(LEFT_CHECK)==0){
-        digitalWrite(0,HIGH);
+        digitalWrite(GREEN_LED,HIGH);
         line_skip_junction();
         line_start();
+        yellow_flash();
         state++;
       }
       break;
 
     case 7:
       // Enter the tunnel mode based on IR reading
+      //line_start(); //remove after testing
       if (digitalRead(IR_TUNNEL)==0){
-        line_skip_junction();
-        digitalWrite(A3,HIGH);
         line_running = false;
+        digitalWrite(GREEN_LED, LOW);
+        digitalWrite(YELLOW_LED,HIGH);
         tunnel_start();
         state++;
       }
@@ -185,7 +191,8 @@ void loop() {
       // Exits the tunnel mode based on IR reading//
       if (left_ticks>30 && digitalRead(IR_TUNNEL)==1){
         line_skip_junction();
-        digitalWrite(1,HIGH);
+        digitalWrite(YELLOW_LED, LOW);
+        digitalWrite(RED_LED,HIGH);
         tunnel_running = false;
         line_start();
         if (is_high_density){
@@ -247,6 +254,55 @@ void loop() {
         state=3;
       }
       break;
+
+    case 20:
+      if (left_ticks>580 && digitalRead(RIGHT_CHECK)==0 && digitalRead(LEFT_CHECK)==1){
+        line_running = false;
+        enc_pivot(800);   
+        state++;
+      }
+      break;
+
+    case 21:
+      // Enter red
+      if (encoder_running == false){
+        enc_move(300);   
+        state++;
+      }
+      break;
+
+    case 22:
+      // Score and leave red
+      if (encoder_running == false){
+        drop();
+        enc_move(-300);   
+        state++;
+      }
+      break;
+
+    case 23:
+      // Turn back to line
+      if (encoder_running == false){
+        enc_pivot(-800);
+        state++;
+      }
+    break;
+
+    case 24:
+      // Skip forward
+      if (encoder_running == false){
+        line_skip_junction();
+        state=3;
+      }
+      break;
+
+    case 30:
+    // Testing only
+    LeftMotor->run(FORWARD);
+    RightMotor->run(FORWARD);
+    LeftMotor->setSpeedFine(3335);
+    RightMotor->setSpeedFine(4000);
+
   
      default:
        Serial.print("State not written - State ");Serial.println(state);
@@ -273,7 +329,7 @@ void loop() {
 void line_start(){
   Serial.println("Line Starting");
   line_running = true;
-  LeftMotor->setSpeedFine(3300);
+  LeftMotor->setSpeedFine(3335);
   RightMotor->setSpeedFine(4000);
   LeftMotor->run(FORWARD);
   RightMotor->run(FORWARD);
@@ -302,7 +358,7 @@ void line_update(){
 void line_skip_junction(){
   LeftMotor->run(FORWARD);
   RightMotor->run(FORWARD);
-  LeftMotor->setSpeedFine(3300);
+  LeftMotor->setSpeedFine(3335);
   RightMotor->setSpeedFine(4000);
   delay(800);
 }
@@ -312,20 +368,22 @@ void line_skip_junction(){
 
 //+++TUNNEL FUNCTIONS+++//
 void tunnel_start(){
-  tunnel_running = true;
-  LeftMotor->setSpeedFine(3300);
+  LeftMotor->setSpeedFine(3350);
   RightMotor->setSpeedFine(4000);
   LeftMotor->run(FORWARD);
   RightMotor->run(FORWARD);
   left_ticks = 0;
   right_ticks = 0;
+  line_skip_junction();
+  line_skip_junction();
+  tunnel_running = true;
 }
 
-void tunnel_update() {
-  if (distanceSensorLeft.measureDistanceCm() * 10.026 - 10.515 < 75) {
+void tunnel_update() { // average distance is 80
+  if (distanceSensorLeft.measureDistanceCm() * 10.026 - 10.515 < 70) {
     LeftMotor->run(FORWARD);
     RightMotor->run(RELEASE);
-  } else if (distanceSensorLeft.measureDistanceCm() * 10.026 - 10.515 > 85) {
+  } else if (distanceSensorLeft.measureDistanceCm() * 10.026 - 10.515 > 90) {
     LeftMotor->run(RELEASE);
     RightMotor->run(FORWARD);
   } else {
@@ -439,5 +497,13 @@ int check_block(){ //returns true for high-density block
   average = average/100;
   Serial.println(average);
   drop();
-  return (true);
+  return (false);
 }
+
+//Debugging functions
+void yellow_flash(){
+  digitalWrite(YELLOW_LED, HIGH);
+  delay(1000);
+  digitalWrite(YELLOW_LED, LOW);
+}
+
