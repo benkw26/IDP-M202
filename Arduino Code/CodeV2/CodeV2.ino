@@ -256,14 +256,30 @@ void loop() {
       break;
 
     case 20:
-      if (left_ticks>580 && digitalRead(RIGHT_CHECK)==0 && digitalRead(LEFT_CHECK)==1){
+      // Skip green bin junction 
+      if (left_ticks>180 && digitalRead(RIGHT_CHECK)==0 && digitalRead(LEFT_CHECK)==1){
+        line_skip_junction();
+        line_start();
+        state++;
+      }
+
+    case 21:
+      // Skip starting bin junction
+      if (left_ticks>200 && digitalRead(RIGHT_CHECK)==0 && digitalRead(LEFT_CHECK)==1){
+        line_skip_junction();
+        line_start();
+        state++;
+      }
+    
+    case 22:
+      if (left_ticks>200 && digitalRead(RIGHT_CHECK)==0 && digitalRead(LEFT_CHECK)==1){
         line_running = false;
         enc_pivot(800);   
         state++;
       }
       break;
 
-    case 21:
+    case 23:
       // Enter red
       if (encoder_running == false){
         enc_move(300);   
@@ -271,7 +287,7 @@ void loop() {
       }
       break;
 
-    case 22:
+    case 24:
       // Score and leave red
       if (encoder_running == false){
         drop();
@@ -280,7 +296,7 @@ void loop() {
       }
       break;
 
-    case 23:
+    case 25;
       // Turn back to line
       if (encoder_running == false){
         enc_pivot(-800);
@@ -288,11 +304,12 @@ void loop() {
       }
     break;
 
-    case 24:
+    case 26:
       // Skip forward
       if (encoder_running == false){
         line_skip_junction();
-        state=3;
+        line_start();
+        state=4;
       }
       break;
 

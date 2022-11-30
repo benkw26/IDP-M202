@@ -672,6 +672,7 @@ bool check_block(){ //returns true for high-density block
   us_average = us_average/100;
   if (us_average<20){ //ULTRASONIC THRESHOLD
     Serial.println("US LOW");
+    blink();
     is_high_density = false;
   } else {
     long ldr_average = 0;
@@ -680,7 +681,8 @@ bool check_block(){ //returns true for high-density block
       ldr_average += ldr_val;      
     }
     ldr_average = ldr_average / 100;
-    if (ldr_average<930){ //LDR THRESHOLD
+    Serial.print("Average: "); Serial.println(ldr_average);
+    if (ldr_average<935){ //LDR THRESHOLD
       Serial.println("LDR LOW");
       is_high_density = false;
     } else {
