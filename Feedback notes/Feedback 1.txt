@@ -1,4 +1,0 @@
-Different weights of completing certain tasks
-- Differentiate blocks is less important -> Focus on travelling
-
-- Good to have an early prototype
